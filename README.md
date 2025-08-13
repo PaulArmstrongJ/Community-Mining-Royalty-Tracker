@@ -1,0 +1,2 @@
+# Community Mining Royalty Tracker
+
