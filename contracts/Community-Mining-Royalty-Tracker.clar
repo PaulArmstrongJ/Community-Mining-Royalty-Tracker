@@ -10,6 +10,7 @@
 (define-data-var contract-balance uint u0)
 (define-data-var total-mining-operations uint u0)
 (define-data-var total-communities uint u0)
+(define-data-var contract-paused bool false)
 
 (define-map communities
   {community-id: uint}
@@ -50,6 +51,7 @@
 
 (define-public (register-community (name (string-ascii 50)) (wallet principal) (royalty-percentage uint))
   (let ((community-id (+ (var-get total-communities) u1)))
+    (asserts! (not (var-get contract-paused)) ERR_UNAUTHORIZED)
     (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
     (asserts! (and (>= royalty-percentage u1) (<= royalty-percentage u100)) ERR_INVALID_PERCENTAGE)
     (asserts! (is-none (map-get? communities {community-id: community-id})) ERR_ALREADY_EXISTS)
@@ -75,6 +77,7 @@
     (community-data (unwrap! (map-get? communities {community-id: community-id}) ERR_COMMUNITY_NOT_FOUND))
     (royalty-amount (/ (* production-value (get royalty-percentage community-data)) u100))
   )
+    (asserts! (not (var-get contract-paused)) ERR_UNAUTHORIZED)
     (asserts! (> production-value u0) ERR_INVALID_AMOUNT)
     (asserts! (get is-active community-data) ERR_COMMUNITY_NOT_FOUND)
     
@@ -164,6 +167,22 @@
   )
 )
 
+(define-public (pause-contract)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (var-set contract-paused true)
+    (ok true)
+  )
+)
+
+(define-public (unpause-contract)
+  (begin
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (var-set contract-paused false)
+    (ok true)
+  )
+)
+
 (define-read-only (get-community (community-id uint))
   (map-get? communities {community-id: community-id})
 )
@@ -215,6 +234,10 @@
     community-data (get is-active community-data)
     false
   )
+)
+
+(define-read-only (is-contract-paused)
+  (var-get contract-paused)
 )
 
 (define-read-only (get-contract-owner)
