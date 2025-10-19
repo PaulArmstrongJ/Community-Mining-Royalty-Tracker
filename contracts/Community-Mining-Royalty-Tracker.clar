@@ -167,6 +167,18 @@
   )
 )
 
+(define-public (update-community-wallet (community-id uint) (new-wallet principal))
+  (let ((community-data (unwrap! (map-get? communities {community-id: community-id}) ERR_COMMUNITY_NOT_FOUND)))
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (asserts! (get is-active community-data) ERR_COMMUNITY_NOT_FOUND)
+    (map-set communities
+      {community-id: community-id}
+      (merge community-data {wallet: new-wallet})
+    )
+    (ok true)
+  )
+)
+
 (define-public (pause-contract)
   (begin
     (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)

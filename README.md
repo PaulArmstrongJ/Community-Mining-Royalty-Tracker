@@ -72,6 +72,7 @@ clarinet console
 | `fund-contract` | Add STX tokens to the contract for royalty payments |
 | `deactivate-community` | Disable a community (owner only) |
 | `update-royalty-percentage` | Modify community royalty rate (owner only) |
+| `update-community-wallet` | Update a community's wallet address (owner only) |
 
 ### Read-Only Functions
 
