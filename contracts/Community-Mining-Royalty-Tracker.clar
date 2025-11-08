@@ -1,4 +1,4 @@
-(define-constant CONTRACT_OWNER tx-sender)
+(define-data-var contract-owner principal tx-sender)
 (define-constant ERR_UNAUTHORIZED (err u100))
 (define-constant ERR_INVALID_AMOUNT (err u101))
 (define-constant ERR_INSUFFICIENT_FUNDS (err u102))
@@ -52,7 +52,7 @@
 (define-public (register-community (name (string-ascii 50)) (wallet principal) (royalty-percentage uint))
   (let ((community-id (+ (var-get total-communities) u1)))
     (asserts! (not (var-get contract-paused)) ERR_UNAUTHORIZED)
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
     (asserts! (and (>= royalty-percentage u1) (<= royalty-percentage u100)) ERR_INVALID_PERCENTAGE)
     (asserts! (is-none (map-get? communities {community-id: community-id})) ERR_ALREADY_EXISTS)
     
@@ -146,7 +146,7 @@
 
 (define-public (deactivate-community (community-id uint))
   (let ((community-data (unwrap! (map-get? communities {community-id: community-id}) ERR_COMMUNITY_NOT_FOUND)))
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
     (map-set communities
       {community-id: community-id}
       (merge community-data {is-active: false})
@@ -157,7 +157,7 @@
 
 (define-public (update-royalty-percentage (community-id uint) (new-percentage uint))
   (let ((community-data (unwrap! (map-get? communities {community-id: community-id}) ERR_COMMUNITY_NOT_FOUND)))
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
     (asserts! (and (>= new-percentage u1) (<= new-percentage u100)) ERR_INVALID_PERCENTAGE)
     (map-set communities
       {community-id: community-id}
@@ -169,7 +169,7 @@
 
 (define-public (update-community-wallet (community-id uint) (new-wallet principal))
   (let ((community-data (unwrap! (map-get? communities {community-id: community-id}) ERR_COMMUNITY_NOT_FOUND)))
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
     (asserts! (get is-active community-data) ERR_COMMUNITY_NOT_FOUND)
     (map-set communities
       {community-id: community-id}
@@ -181,7 +181,7 @@
 
 (define-public (pause-contract)
   (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
     (var-set contract-paused true)
     (ok true)
   )
@@ -189,7 +189,7 @@
 
 (define-public (unpause-contract)
   (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
     (var-set contract-paused false)
     (ok true)
   )
@@ -252,6 +252,14 @@
   (var-get contract-paused)
 )
 
+(define-public (transfer-ownership (new-owner principal))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
+    (var-set contract-owner new-owner)
+    (ok true)
+  )
+)
+
 (define-read-only (get-contract-owner)
-  CONTRACT_OWNER
+  (var-get contract-owner)
 )

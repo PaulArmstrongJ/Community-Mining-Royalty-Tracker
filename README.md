@@ -73,6 +73,7 @@ clarinet console
 | `deactivate-community` | Disable a community (owner only) |
 | `update-royalty-percentage` | Modify community royalty rate (owner only) |
 | `update-community-wallet` | Update a community's wallet address (owner only) |
+| `transfer-ownership` | Transfer contract ownership to a new principal (owner only) |
 
 ### Read-Only Functions
 
@@ -106,9 +107,10 @@ The contract maintains three main data structures:
 ## 🔒 Security Features
 
 - Owner-only administrative functions
-- Input validation on all parameters  
+- Input validation on all parameters
 - Balance checks before transfers
 - Community activation status controls
+- Transferable contract ownership for enhanced governance
 
 ## 📈 Royalty Calculation
 
