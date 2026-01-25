@@ -10,6 +10,7 @@ Local communities often don't receive promised mining royalties due to lack of t
 - 🏦 **Fixed Wallet Allocation** - Communities have designated wallets that automatically receive payments
 - 📊 **Public Payout History** - Complete history of all royalty distributions is permanently recorded
 - ⚡ **Automatic Distribution** - Royalties are distributed immediately when mining production is logged
+- ⏸️ **Individual Community Pause** - Contract owner can pause/unpause specific communities for targeted operational control
 
 ## 🚀 Quick Start
 
@@ -74,6 +75,8 @@ clarinet console
 | `update-royalty-percentage` | Modify community royalty rate (owner only) |
 | `update-community-wallet` | Update a community's wallet address (owner only) |
 | `transfer-ownership` | Transfer contract ownership to a new principal (owner only) |
+| `pause-community` | Pause a specific community (owner only) |
+| `unpause-community` | Unpause a specific community (owner only) |
 
 ### Read-Only Functions
 

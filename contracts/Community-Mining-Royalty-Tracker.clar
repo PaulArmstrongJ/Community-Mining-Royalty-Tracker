@@ -6,6 +6,7 @@
 (define-constant ERR_MINING_OPERATION_NOT_FOUND (err u104))
 (define-constant ERR_INVALID_PERCENTAGE (err u105))
 (define-constant ERR_ALREADY_EXISTS (err u106))
+(define-constant ERR_COMMUNITY_PAUSED (err u107))
 
 (define-data-var contract-balance uint u0)
 (define-data-var total-mining-operations uint u0)
@@ -19,7 +20,8 @@
     wallet: principal,
     royalty-percentage: uint,
     total-received: uint,
-    is-active: bool
+    is-active: bool,
+    paused: bool
   }
 )
 
@@ -63,7 +65,8 @@
         wallet: wallet,
         royalty-percentage: royalty-percentage,
         total-received: u0,
-        is-active: true
+        is-active: true,
+        paused: false
       }
     )
     (var-set total-communities community-id)
@@ -80,6 +83,7 @@
     (asserts! (not (var-get contract-paused)) ERR_UNAUTHORIZED)
     (asserts! (> production-value u0) ERR_INVALID_AMOUNT)
     (asserts! (get is-active community-data) ERR_COMMUNITY_NOT_FOUND)
+    (asserts! (not (get paused community-data)) ERR_COMMUNITY_PAUSED)
     
     (map-set mining-operations
       {operation-id: operation-id}
@@ -195,6 +199,28 @@
   )
 )
 
+(define-public (pause-community (community-id uint))
+  (let ((community-data (unwrap! (map-get? communities {community-id: community-id}) ERR_COMMUNITY_NOT_FOUND)))
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
+    (map-set communities
+      {community-id: community-id}
+      (merge community-data {paused: true})
+    )
+    (ok true)
+  )
+)
+
+(define-public (unpause-community (community-id uint))
+  (let ((community-data (unwrap! (map-get? communities {community-id: community-id}) ERR_COMMUNITY_NOT_FOUND)))
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
+    (map-set communities
+      {community-id: community-id}
+      (merge community-data {paused: false})
+    )
+    (ok true)
+  )
+)
+
 (define-read-only (get-community (community-id uint))
   (map-get? communities {community-id: community-id})
 )
@@ -262,4 +288,15 @@
 
 (define-read-only (get-contract-owner)
   (var-get contract-owner)
+)
+
+(define-public (emergency-withdraw (amount uint))
+  (begin
+    (asserts! (is-eq tx-sender (var-get contract-owner)) ERR_UNAUTHORIZED)
+    (asserts! (> amount u0) ERR_INVALID_AMOUNT)
+    (asserts! (>= (var-get contract-balance) amount) ERR_INSUFFICIENT_FUNDS)
+    (try! (as-contract (stx-transfer? amount tx-sender tx-sender)))
+    (var-set contract-balance (- (var-get contract-balance) amount))
+    (ok amount)
+  )
 )
